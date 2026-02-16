@@ -144,12 +144,12 @@ export default function Login() {
                                     onChange={(e) => setPassword(e.currentTarget.value)}
                                 />
 
-                                <Group justify="space-between">
+                                {/* <Group justify="space-between">
                                     <Checkbox label="Remember me" size="sm" />
                                     <Anchor component="button" type="button" size="sm" fw={600}>
                                         Forgot password?
                                     </Anchor>
-                                </Group>
+                                </Group> */}
 
                                 <Button
                                     fullWidth
