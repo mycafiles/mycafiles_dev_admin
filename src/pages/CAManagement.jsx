@@ -34,11 +34,19 @@ export default function CAManagement() {
             name: '',
             email: '',
             password: '',
+            confirmPassword: '',
         },
         validate: {
             name: (value) => (value.length < 2 ? 'Name must have at least 2 letters' : null),
             email: (value) => (/^\S+@\S+$/.test(value) ? null : 'Invalid email'),
-            password: (value) => (editingCa ? null : value.length < 5 ? 'Password must be at least 6 characters' : null),
+            password: (value) => {
+                if (editingCa) {
+                    return value && value.length < 5 ? 'Password must be at least 6 characters' : null;
+                }
+                return value.length < 5 ? 'Password must be at least 6 characters' : null;
+            },
+            confirmPassword: (value, values) =>
+                values.password && value !== values.password ? 'Passwords do not match' : null,
         },
     });
 
@@ -60,10 +68,16 @@ export default function CAManagement() {
 
     const handleAddEdit = async (values) => {
         try {
+            const payload = { ...values };
+            delete payload.confirmPassword;
+            if (editingCa && !payload.password) {
+                delete payload.password;
+            }
+
             if (editingCa) {
-                await caService.updateCa(editingCa._id, values);
+                await caService.updateCa(editingCa._id, payload);
             } else {
-                await caService.createCa(values);
+                await caService.createCa(payload);
             }
             setOpened(false);
             form.reset();
@@ -101,7 +115,8 @@ export default function CAManagement() {
         form.setValues({
             name: ca.name,
             email: ca.email,
-            password: '', // Don't show password on edit
+            password: '',
+            confirmPassword: '',
         });
         setOpened(true);
     };
@@ -200,14 +215,18 @@ export default function CAManagement() {
                             required
                             {...form.getInputProps('email')}
                         />
-                        {!editingCa && (
-                            <PasswordInput
-                                label="Password"
-                                placeholder="Secure password"
-                                required
-                                {...form.getInputProps('password')}
-                            />
-                        )}
+                        <PasswordInput
+                            label={editingCa ? "New Password (leave blank to keep current)" : "Password"}
+                            placeholder="Secure password"
+                            required={!editingCa}
+                            {...form.getInputProps('password')}
+                        />
+                        <PasswordInput
+                            label="Confirm Password"
+                            placeholder="Confirm password"
+                            required={!editingCa || !!form.values.password}
+                            {...form.getInputProps('confirmPassword')}
+                        />
                         <Group justify="flex-end" mt="md">
                             <Button variant="light" onClick={() => setOpened(false)}>Cancel</Button>
                             <Button type="submit">Save</Button>
